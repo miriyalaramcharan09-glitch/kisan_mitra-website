@@ -1,0 +1,98 @@
+[
+  {
+    "id": "p1",
+    "name": "Pink Bollworm (Pectinophora gossypiella)",
+    "name_te": "గులాబీ రంగు కాయ తొలుచు పురుగు",
+    "name_hi": "गुलाबी सुंडी",
+    "target_crops": ["Cotton"],
+    "symptoms": "Rosetted flowers, double seeds inside bolls, premature opening of bolls with stained lint, small holes plugged with excreta.",
+    "identification": "Small pink caterpillars (10-12 mm) inside squares and bolls; small greyish-brown moths with fringed wings.",
+    "biological_control": "Release Trichogramma bactrae egg parasitoid @ 60,000/acre. Spray Beauveria bassiana @ 5g/L. Install 8 pheromone traps/acre.",
+    "chemical_control": "Spray Emamectin Benzoate 5% SG @ 0.5g/L or Chlorantraniliprole 18.5% SC @ 0.3ml/L or Profenofos 50% EC @ 2ml/L.",
+    "prevention": "Avoid staggered sowings; terminate crop by December; strictly avoid ratoon cotton."
+  },
+  {
+    "id": "p2",
+    "name": "Whitefly (Bemisia tabaci)",
+    "name_te": "తెల్లదోమ",
+    "name_hi": "सफेद मक्खी",
+    "target_crops": ["Chilli", "Tomato", "Okra", "Cotton", "Brinjal"],
+    "symptoms": "Yellowing and upward curling of leaves, sticky honeydew secretion with black sooty mold growth on leaf surface, transmission of viral diseases (Leaf Curl, YVMV).",
+    "identification": "Tiny (1 mm) white moth-like insects congregating under leaf undersides, flying up in swarms when shaken.",
+    "biological_control": "Install 15-20 yellow sticky traps/acre. Spray 5% Neem oil (10,000 ppm) or Verticillium lecanii @ 5g/L.",
+    "chemical_control": "Spray Diafenthiuron 50% WP @ 1.25g/L or Spiromesifen 22.9% SC @ 1ml/L or Acetamiprid 20% SP @ 0.2g/L.",
+    "prevention": "Eradicate weed hosts around field borders; plant 2 rows of maize or pearl millet as border windbreaks."
+  },
+  {
+    "id": "p3",
+    "name": "Fall Armyworm (Spodoptera frugiperda)",
+    "name_te": "కత్తెర పురుగు",
+    "name_hi": "फॉल आर्मीवर्म",
+    "target_crops": ["Maize (Corn)", "Sugarcane", "Rice"],
+    "symptoms": "Severe skeletonization of leaves, deep ragged feeding holes in whorls, heaps of sawdust-like brown frass inside whorls.",
+    "identification": "Greenish-brown larvae with inverted 'Y' shaped white mark on head and 4 dark spots arranged in square on 8th abdominal segment.",
+    "biological_control": "Place sand mixed with lime/ash into whorls. Release egg parasitoids Telenomus remus. Spray Metarhizium anisopliae @ 5g/L.",
+    "chemical_control": "Spray Chlorantraniliprole 18.5% SC @ 0.4ml/L or Spinetoram 11.7% SC @ 0.5ml/L directed into central leaf whorl with knapsack nozzle.",
+    "prevention": "Synchronized early community sowing; intercrop with cowpea; deep summer plowing to expose pupae to birds."
+  },
+  {
+    "id": "p4",
+    "name": "Aphids (Aphis gossypii / Myzus persicae)",
+    "name_te": "పేనుబంక",
+    "name_hi": "माहू / एफिड",
+    "target_crops": ["Chilli", "Tomato", "Wheat", "Groundnut", "Pulses"],
+    "symptoms": "Stunted curling tender shoots, honey-dew drops attracting black ants and black sooty mold on upper leaf canopy.",
+    "identification": "Soft-bodied pear-shaped tiny green, black or yellow insects crowding on tender growing tips and flower buds.",
+    "biological_control": "Encourage ladybird beetles and hoverflies. Spray soap water (5g/L) or Dashaparni ark. Spray Neem oil (5ml/L).",
+    "chemical_control": "Spray Imidacloprid 17.8% SL @ 0.3ml/L or Dimethoate 30% EC @ 1.7ml/L or Thiamethoxam 25% WG @ 0.3g/L.",
+    "prevention": "Avoid excess nitrogen fertilizer which produces overly succulent vegetative shoots."
+  },
+  {
+    "id": "p5",
+    "name": "Stem Borer & Leaf Folder",
+    "name_te": "కాండం తొలుచు పురుగు & ఆకు చుట్టు పురుగు",
+    "name_hi": "तना छेदक और पत्ता लपेटक",
+    "target_crops": ["Rice (Paddy)", "Sugarcane", "Maize"],
+    "symptoms": "'Dead heart' in tillering stage (central shoot dries and pulls out easily); 'White earhead' at panicle emergence; folded longitudinal leaf blades with white scraped patches.",
+    "causes": "Scirpophaga incertulas (Yellow stem borer) and Cnaphalocrocis medinalis larvae.",
+    "biological_control": "Install 5 pheromone traps/acre. Release Trichogramma japonicum @ 40,000/acre at 30 and 45 days after transplanting.",
+    "chemical_control": "Apply Cartap Hydrochloride 4% G @ 7.5 kg/acre or spray Chlorantraniliprole 18.5% SC @ 0.3ml/L or Flubendiamide 39.35% SC @ 0.2ml/L.",
+    "prevention": "Clip seedling tips before transplanting to remove egg masses. Avoid stagnant water level during peak moth emergence."
+  },
+  {
+    "id": "p6",
+    "name": "Fruit and Shoot Borer (Leucinodes orbonalis)",
+    "name_te": "వంకాయ కాయ & కొమ్మ తొలుచు పురుగు",
+    "name_hi": "बैंगन का फल एवं तना छेदक",
+    "target_crops": ["Brinjal (Eggplant)", "Tomato"],
+    "symptoms": "Terminal shoots droop and wither, visible entry bore holes on eggplant fruits plugged with frass, fruit rot.",
+    "identification": "Pinkish larvae with brown head boring into fruit flesh; white moths with triangular wings having brownish-red spots.",
+    "biological_control": "Weekly mechanical clipping of withered shoots. Install Lucin-lure pheromone traps @ 12/acre. Spray NSKE 5%.",
+    "chemical_control": "Spray Emamectin Benzoate 5% SG @ 0.4g/L or Spinosad 45% SC @ 0.3ml/L or Chlorantraniliprole 18.5% SC @ 0.4ml/L.",
+    "prevention": "Avoid continuous Solanaceous cropping; destroy crop residue immediately after harvesting."
+  },
+  {
+    "id": "p7",
+    "name": "Pod Borer / Gram Caterpillar (Helicoverpa armigera)",
+    "name_te": "శనగ పచ్చ పురుగు (కాయ తొలుచు పురుగు)",
+    "name_hi": "चना फली छेदक (हेलिकोवर्पा)",
+    "target_crops": ["Pulses", "Tomato", "Cotton", "Chilli"],
+    "symptoms": "Circular holes on flower buds and pods; caterpillar feeds with body half-entered into the pod; chewed seed grains.",
+    "identification": "Greenish, brownish or striped stout caterpillar with distinct lateral lines along body; prominent noctuid moth.",
+    "biological_control": "Erect 15 bird perches/acre. Spray HaNPV (250 LE/acre) with 0.1% jaggery. Spray Bacillus thuringiensis (Bt) @ 2g/L.",
+    "chemical_control": "Spray Chlorantraniliprole 18.5% SC @ 0.3ml/L or Indoxacarb 14.5% SC @ 0.75ml/L or Flubendiamide 480 SC @ 0.2ml/L.",
+    "prevention": "Intercropping pulses with coriander or marigold as trap crops; early synchronous sowing."
+  },
+  {
+    "id": "p8",
+    "name": "Rhinoceros Beetle & Red Palm Weevil",
+    "name_te": "కొమ్ము పురుగు మరియు ఎర్ర ముక్కు పురుగు",
+    "name_hi": "गैंडा भृंग और लाल ताड़ घुन",
+    "target_crops": ["Coconut"],
+    "symptoms": "V-shaped clipping cuts on palm fronds; chewed wet fiber extrusion and thick viscous brownish liquid oozing from holes on coconut trunk.",
+    "identification": "Large black beetle with single horn on head (Rhinoceros beetle); reddish-brown weevil with prominent snout (Red palm weevil).",
+    "biological_control": "Hook out beetles from crowns using iron rod. Place Rhinolure / Ferrolure pheromone traps. Fill inner leaf axils with sand + neem cake (1:1).",
+    "chemical_control": "Root feeding of Monocrotophos (10ml + 10ml water) per palm or stem injection of Imidacloprid (for severe weevil infestation in non-bearing/harvested palms).",
+    "prevention": "Maintain cleanliness around base; avoid wounding palm stems with climbing knives; treat manure pits with Metarhizium to destroy grubs."
+  }
+]
