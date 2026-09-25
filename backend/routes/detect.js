@@ -1,70 +1,51 @@
 import { Router } from 'express';
 import db from '../db.js';
+import { classifyPlantCondition } from '../services/visualClassifier.js';
+import { analyzePlantWithGemini } from '../services/geminiVision.js';
 
 const router = Router();
 
 // POST /api/detect
-// Body: { imageBase64, cropHint, symptomHint }
-router.post('/', (req, res) => {
+// Body: { imageBase64, cropHint, symptomHint, apiKey }
+router.post('/', async (req, res) => {
   try {
-    const { cropHint = '', symptomHint = '' } = req.body || {};
-    const rows = db.prepare('SELECT * FROM crops').all();
+    const { cropHint = '', symptomHint = '', imageBase64 = '', apiKey: customApiKey = '' } = req.body || {};
+    const headerApiKey = req.headers['x-gemini-api-key'] || '';
+    const geminiKey = (customApiKey || headerApiKey || process.env.GEMINI_API_KEY || '').trim();
 
-    if (!rows || rows.length === 0) {
-      return res.status(503).json({ error: 'Crop database is empty. Please restart the backend to re-seed data.' });
-    }
-
-    let pick = null;
-
-    // Match by crop name first
-    if (cropHint) {
-      pick = rows.find((r) =>
-        r.name.toLowerCase().includes(cropHint.toLowerCase()) ||
-        (r.name_te && r.name_te.includes(cropHint)) ||
-        (r.name_hi && r.name_hi.includes(cropHint))
-      );
-    }
-
-    // Then match by symptom hint
-    if (!pick && symptomHint) {
-      pick = rows.find((r) =>
-        r.symptoms.toLowerCase().includes(symptomHint.toLowerCase()) ||
-        r.disease.toLowerCase().includes(symptomHint.toLowerCase()) ||
-        (r.causes && r.causes.toLowerCase().includes(symptomHint.toLowerCase()))
-      );
-    }
-
-    // Fallback: random crop
-    if (!pick) {
-      pick = rows[Math.floor(Math.random() * rows.length)];
-    }
-
-    const confidence = Math.floor(88 + Math.random() * 10);
-
-    res.json({
-      crop: pick.name,
-      crop_te: pick.name_te || pick.name,
-      crop_hi: pick.name_hi || pick.name,
-      disease: pick.disease,
-      disease_te: pick.disease_te || pick.disease,
-      disease_hi: pick.disease_hi || pick.disease,
-      severity: pick.severity || 'Moderate',
-      confidence,
-      symptoms: pick.symptoms,
-      causes: pick.causes,
-      organic_remedies: pick.organic_remedies,
-      chemical_remedies: pick.chemical_remedies,
-      precautions: pick.precautions,
-      suggestions: pick.suggestions,
-      fertilizer: pick.fertilizer,
-      soil_type: pick.soil_type,
-      growth_stages: pick.growth_stages ? JSON.parse(pick.growth_stages) : [],
-      audioText: {
-        en: `Identified ${pick.name} disease: ${pick.disease} with ${confidence} percent confidence. ${pick.symptoms} Suggested organic remedy: ${pick.organic_remedies}`,
-        te: `గుర్తించబడిన పంట: ${pick.name_te || pick.name}. వ్యాధి: ${pick.disease_te || pick.disease}. ఖచ్చితత్వం ${confidence} శాతం. నివారణ: ${pick.organic_remedies}`,
-        hi: `पहचानी गई फसल: ${pick.name_hi || pick.name}। बीमारी: ${pick.disease_hi || pick.disease}। विश्वसनीयता ${confidence} प्रतिशत। रोकथाम: ${pick.organic_remedies}`
+    // 1. If Gemini API Key is provided, use Google Gemini 1.5 Flash Vision AI
+    if (geminiKey && imageBase64) {
+      try {
+        console.log('🤖 Running diagnosis via Google Gemini Vision AI...');
+        const geminiResult = await analyzePlantWithGemini({
+          apiKey: geminiKey,
+          imageBase64,
+          cropHint,
+          symptomHint,
+        });
+        return res.json(geminiResult);
+      } catch (geminiErr) {
+        console.warn('⚠️ Gemini Vision failed, falling back to Agronomy Visual Classifier:', geminiErr.message);
       }
+    }
+
+    // 2. Offline / Built-in Visual Classifier & Agronomic Matcher
+    const rows = db.prepare('SELECT * FROM crops').all();
+    if (!rows || rows.length === 0) {
+      return res.status(503).json({ error: 'Crop database is empty. Please check backend seed data.' });
+    }
+
+    const diagnosis = classifyPlantCondition(rows, {
+      cropHint,
+      symptomHint,
+      imageBase64,
     });
+
+    if (!diagnosis) {
+      return res.status(500).json({ error: 'Failed to classify plant image.' });
+    }
+
+    return res.json(diagnosis);
   } catch (err) {
     console.error('Detect route error:', err);
     res.status(500).json({ error: 'Detection failed: ' + err.message });

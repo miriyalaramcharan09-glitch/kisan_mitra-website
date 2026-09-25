@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import {
   Volume2, VolumeX, ShieldCheck, AlertTriangle, Sparkles,
-  Sprout, Leaf, FlaskConical, ArrowLeft, RotateCcw, Share2, Printer
+  Sprout, Leaf, FlaskConical, ArrowLeft, RotateCcw, Printer, Eye, CheckCircle2, Cpu
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Disclaimer from '../components/Disclaimer.jsx';
@@ -24,6 +24,8 @@ export default function Result() {
     disease_hi: 'अगेती झुलसा',
     severity: 'Moderate',
     confidence: 94,
+    engine: 'Smart Agronomy Diagnostic Engine',
+    visualAnalysis: 'Detected 28% necrotic brown circular spots with characteristic concentric chlorotic halo.',
     symptoms: 'Dark brown to black concentric rings on lower leaves, resembling a bullseye. Yellowing halos around spots, stem lesions, and fruit rot near the stem end.',
     causes: 'Fungal pathogen (Alternaria solani), favored by warm temperatures (24-29°C) and alternating wet and dry weather with high humidity.',
     organic_remedies: 'Spray Neem oil (5ml/L) or Trichoderma viride (10g/L). Remove and bury infected bottom leaves. Apply copper oxychloride bio-formulation.',
@@ -40,6 +42,7 @@ export default function Result() {
   };
 
   const data = state || defaultData;
+  const isHealthy = data.severity === 'Healthy' || (data.disease && data.disease.toLowerCase().includes('healthy'));
 
   const getCropName = () => {
     if (i18n.language === 'te' && data.crop_te) return data.crop_te;
@@ -99,7 +102,7 @@ export default function Result() {
           className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-leaf-800 hover:text-leaf-900 bg-white px-3 py-1.5 rounded-xl shadow-xs border border-leaf-200"
         >
           <ArrowLeft size={16} />
-          <span>Back to Home</span>
+          <span>Back to Scanner</span>
         </button>
 
         <div className="flex items-center gap-2">
@@ -121,24 +124,34 @@ export default function Result() {
       </div>
 
       {/* Main Diagnostic Summary Card */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+      <div className="glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-leaf-500 via-amber-400 to-rose-500" />
 
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2 flex-1">
+          <div className="space-y-2 flex-1 text-left">
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-3 py-1 rounded-full bg-leaf-100 text-leaf-800 text-xs font-bold flex items-center gap-1">
                 <ShieldCheck size={14} className="text-leaf-600" />
                 <span>{t('result.title')}</span>
               </span>
+
+              {/* Diagnostic Engine Badge */}
+              <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1 border border-slate-200">
+                <Cpu size={12} className="text-slate-500" />
+                <span>{data.engine || 'AI Diagnostic Model'}</span>
+              </span>
+
+              {/* Severity Pill */}
               <span
                 className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  data.severity === 'High'
+                  isHealthy
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                    : data.severity === 'High' || data.severity === 'Critical'
                     ? 'bg-rose-100 text-rose-800 border border-rose-200'
                     : 'bg-amber-100 text-amber-800 border border-amber-200'
                 }`}
               >
-                Severity: {data.severity || 'Moderate'}
+                {isHealthy ? 'Status: Healthy Foliage' : `Severity: ${data.severity || 'Moderate'}`}
               </span>
             </div>
 
@@ -155,7 +168,7 @@ export default function Result() {
               <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
                 {t('result.disease')}
               </p>
-              <p className="text-lg sm:text-xl font-bold text-rose-700">
+              <p className={`text-lg sm:text-xl font-bold ${isHealthy ? 'text-emerald-700' : 'text-rose-700'}`}>
                 {getDiseaseName()}
               </p>
             </div>
@@ -169,7 +182,7 @@ export default function Result() {
                 <span className="text-3xl font-extrabold text-leaf-700">
                   {data.confidence || 92}%
                 </span>
-                <span className="text-xs text-leaf-600 font-bold">Accuracy</span>
+                <span className="text-xs text-leaf-600 font-bold">Diagnostic Match</span>
               </div>
             </div>
 
@@ -188,17 +201,28 @@ export default function Result() {
           </div>
         </div>
 
-        {/* Optional preview thumbnail if user uploaded an image */}
+        {/* Visual Analysis Breakdown Box */}
+        {data.visualAnalysis && (
+          <div className="mt-5 p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-left flex items-start gap-3">
+            <Eye size={18} className="text-amber-700 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-bold text-amber-900 uppercase tracking-wider">Visual Diagnostic Observation:</p>
+              <p className="text-xs sm:text-sm text-amber-950 font-medium mt-0.5 leading-relaxed">{data.visualAnalysis}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Uploaded Thumbnail Preview */}
         {data.imagePreview && (
-          <div className="mt-6 pt-6 border-t border-slate-100 flex items-center gap-4">
+          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-4 text-left">
             <img
               src={data.imagePreview}
-              alt="Diagnosed Crop"
-              className="w-20 h-20 rounded-2xl object-cover border-2 border-leaf-300 shadow-sm"
+              alt="Diagnosed Crop Leaf"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-leaf-300 shadow-sm shrink-0"
             />
             <div>
-              <p className="text-xs font-bold text-slate-700">Scanned Leaf Sample</p>
-              <p className="text-xs text-slate-500">Processed through Kisan Mitra Vision Analyzer</p>
+              <p className="text-xs font-bold text-slate-800">Scanned Leaf Sample</p>
+              <p className="text-xs text-slate-500">Processed by Kisan Mitra Visual Pathology Engine</p>
             </div>
           </div>
         )}
@@ -232,7 +256,7 @@ export default function Result() {
 
       {/* Tab 1: Remedies & Control */}
       {activeTab === 'remedies' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4 animate-fade-in text-left">
           {/* Organic Remedies */}
           <div className="bg-emerald-50/90 border border-emerald-200 rounded-3xl p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
@@ -244,7 +268,7 @@ export default function Result() {
               </h3>
             </div>
             <p className="text-sm text-emerald-900 leading-relaxed font-medium">
-              {data.organic_remedies || data.remedies}
+              {data.organic_remedies || data.remedies || 'Apply standard organic bio-fungicide like Trichoderma viride (10g/L) or 5% Neem oil.'}
             </p>
           </div>
 
@@ -286,7 +310,7 @@ export default function Result() {
 
       {/* Tab 2: Symptoms & Causes */}
       {activeTab === 'symptoms' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4 animate-fade-in text-left">
           <div className="glass-card rounded-3xl p-6 shadow-sm">
             <h3 className="font-bold text-base text-slate-900 mb-2 flex items-center gap-2">
               <AlertTriangle size={18} className="text-amber-500" />
@@ -311,7 +335,7 @@ export default function Result() {
 
       {/* Tab 3: Precautions */}
       {activeTab === 'precautions' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4 animate-fade-in text-left">
           <div className="glass-card rounded-3xl p-6 shadow-sm">
             <h3 className="font-bold text-base text-slate-900 mb-2 flex items-center gap-2">
               <ShieldCheck size={18} className="text-emerald-600" />
@@ -336,7 +360,7 @@ export default function Result() {
 
       {/* Tab 4: Soil & Fertilizer */}
       {activeTab === 'fertilizer' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4 animate-fade-in text-left">
           <div className="glass-card rounded-3xl p-6 shadow-sm">
             <h3 className="font-bold text-base text-slate-900 mb-2 flex items-center gap-2">
               <FlaskConical size={18} className="text-cyan-600" />
@@ -345,6 +369,11 @@ export default function Result() {
             <p className="text-sm text-slate-700 leading-relaxed font-medium">
               {data.fertilizer}
             </p>
+            {data.npk_ratio && (
+              <div className="mt-3 inline-block px-3 py-1 bg-cyan-50 border border-cyan-200 rounded-xl text-cyan-800 text-xs font-bold">
+                NPK Ratio: {data.npk_ratio}
+              </div>
+            )}
           </div>
 
           {data.soil_type && (
