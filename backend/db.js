@@ -6,13 +6,9 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const db = new Database(path.join(__dirname, 'kisan.db'));
 
-// Setup tables with full schema
+// Setup tables with full schema — use IF NOT EXISTS to preserve data across restarts
 db.exec(`
-  DROP TABLE IF EXISTS crops;
-  DROP TABLE IF EXISTS pests;
-  DROP TABLE IF EXISTS alerts;
-
-  CREATE TABLE crops (
+  CREATE TABLE IF NOT EXISTS crops (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     name_te TEXT,
@@ -33,7 +29,7 @@ db.exec(`
     fertilizer TEXT
   );
 
-  CREATE TABLE pests (
+  CREATE TABLE IF NOT EXISTS pests (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     name_te TEXT,
@@ -46,7 +42,7 @@ db.exec(`
     prevention TEXT
   );
 
-  CREATE TABLE alerts (
+  CREATE TABLE IF NOT EXISTS alerts (
     id TEXT PRIMARY KEY,
     crop TEXT NOT NULL,
     crop_te TEXT,
@@ -66,8 +62,10 @@ db.exec(`
   );
 `);
 
-// Seed crops
+// Seed crops (only if empty)
 try {
+  const cropCount = db.prepare('SELECT COUNT(*) as count FROM crops').get();
+  if (cropCount.count === 0) {
   const seedPath = path.join(__dirname, 'data', 'crops.json');
   if (fs.existsSync(seedPath)) {
     const crops = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
@@ -109,12 +107,17 @@ try {
     insertManyCrops(crops);
     console.log(`Seeded ${crops.length} detailed crops into SQLite.`);
   }
+  } else {
+    console.log(`Crops table already has ${cropCount.count} rows — skipping seed.`);
+  }
 } catch (err) {
   console.error('Error seeding crops:', err);
 }
 
-// Seed pests
+// Seed pests (only if empty)
 try {
+  const pestCount = db.prepare('SELECT COUNT(*) as count FROM pests').get();
+  if (pestCount.count === 0) {
   const pestsPath = path.join(__dirname, 'data', 'pests.json');
   if (fs.existsSync(pestsPath)) {
     const pests = JSON.parse(fs.readFileSync(pestsPath, 'utf-8'));
@@ -146,12 +149,17 @@ try {
     insertManyPests(pests);
     console.log(`Seeded ${pests.length} pests into SQLite.`);
   }
+  } else {
+    console.log(`Pests table already has ${pestCount.count} rows — skipping seed.`);
+  }
 } catch (err) {
   console.error('Error seeding pests:', err);
 }
 
-// Seed alerts
+// Seed alerts (only if empty)
 try {
+  const alertCount = db.prepare('SELECT COUNT(*) as count FROM alerts').get();
+  if (alertCount.count === 0) {
   const alertsPath = path.join(__dirname, 'data', 'alerts.json');
   if (fs.existsSync(alertsPath)) {
     const alerts = JSON.parse(fs.readFileSync(alertsPath, 'utf-8'));
@@ -188,6 +196,9 @@ try {
     });
     insertManyAlerts(alerts);
     console.log(`Seeded ${alerts.length} disease alerts into SQLite.`);
+  }
+  } else {
+    console.log(`Alerts table already has ${alertCount.count} rows — skipping seed.`);
   }
 } catch (err) {
   console.error('Error seeding alerts:', err);

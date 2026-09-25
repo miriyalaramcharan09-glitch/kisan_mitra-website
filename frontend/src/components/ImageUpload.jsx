@@ -1,7 +1,12 @@
-import { useRef, useState, useEffect } from 'react';
-import { Upload, Camera, Loader2, Sparkles, X, RefreshCw, CheckCircle2, Image as ImageIcon } from 'lucide-react';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { Upload, Camera, Loader2, Sparkles, X, RefreshCw, CheckCircle2, Image as ImageIcon, AlertCircle, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+
+// Resolve API base URL: Vite dev proxy works on relative paths,
+// but in production we need the absolute backend URL.
+// Set VITE_API_URL=https://your-backend.com in frontend/.env for production
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 // Preset test samples for quick test
 const SAMPLES = [
@@ -21,25 +26,28 @@ export default function ImageUpload() {
   const [selectedSample, setSelectedSample] = useState(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [cameraStream, setCameraStream] = useState(null);
-  const [facingMode, setFacingMode] = useState('environment'); // 'environment' (back) or 'user' (front)
+  const [facingMode, setFacingMode] = useState('environment');
   const [cameraError, setCameraError] = useState('');
+  const [error, setError] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [symptomHint, setSymptomHint] = useState('');
 
-  // Handle file selection with client-side canvas compression
-  const handleFile = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // Compress and set preview from a file
+  const processFile = useCallback((file) => {
+    if (!file || !file.type.startsWith('image/')) {
+      setError('Please upload a valid image file (JPG, PNG, WEBP).');
+      return;
+    }
+    setError('');
     setSelectedSample(null);
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        // Compress image using canvas (max 800px width/height)
         const canvas = document.createElement('canvas');
         const maxDim = 800;
         let width = img.width;
         let height = img.height;
-
         if (width > height && width > maxDim) {
           height = Math.round((height * maxDim) / width);
           width = maxDim;
@@ -47,17 +55,30 @@ export default function ImageUpload() {
           width = Math.round((width * maxDim) / height);
           height = maxDim;
         }
-
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
-        setPreview(compressedBase64);
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        setPreview(canvas.toDataURL('image/jpeg', 0.85));
       };
       img.src = event.target.result;
     };
     reader.readAsDataURL(file);
+  }, []);
+
+  // Handle file selection
+  const handleFile = (e) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  // Drag-and-drop handlers
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = () => setIsDragging(false);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
   };
 
   // Open Live Camera
@@ -137,47 +158,69 @@ export default function ImageUpload() {
   // Select a sample preset
   const handleSelectSample = (sample) => {
     setSelectedSample(sample);
+    setError('');
     // Create an SVG leaf placeholder preview with color
     const canvas = document.createElement('canvas');
     canvas.width = 600;
     canvas.height = 400;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#f0fdf4';
+    const gradient = ctx.createLinearGradient(0, 0, 600, 400);
+    gradient.addColorStop(0, '#f0fdf4');
+    gradient.addColorStop(1, '#dcfce7');
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 600, 400);
-    ctx.fillStyle = '#166534';
-    ctx.font = 'bold 32px sans-serif';
+    ctx.font = 'bold 72px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${sample.icon} ${t(sample.labelKey)}`, 300, 180);
+    ctx.fillText(sample.icon, 300, 200);
+    ctx.fillStyle = '#166534';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText(t(sample.labelKey), 300, 260);
     ctx.fillStyle = '#4b5563';
-    ctx.font = '20px sans-serif';
-    ctx.fillText('Sample Test Image', 300, 230);
+    ctx.font = '16px sans-serif';
+    ctx.fillText('Sample Test Image — Kisan Mitra', 300, 295);
     setPreview(canvas.toDataURL('image/png'));
   };
 
   // Run AI Analysis
   const handleAnalyze = async () => {
     setLoading(true);
+    setError('');
     try {
       const payload = {
         cropHint: selectedSample ? selectedSample.cropHint : '',
+        symptomHint: symptomHint.trim(),
         imageBase64: preview,
       };
-      const res = await fetch('/api/detect', {
+      const res = await fetch(`${API_BASE}/api/detect`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Server error ${res.status}`);
+      }
       const data = await res.json();
       navigate('/result', { state: { ...data, imagePreview: preview } });
     } catch (err) {
       console.error('Diagnosis failed:', err);
+      setError(
+        err.message.includes('fetch')
+          ? 'Cannot connect to backend server. Make sure it is running on port 4000.'
+          : err.message || 'Analysis failed. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="glass-card rounded-3xl p-6 sm:p-8 max-w-2xl mx-auto text-center relative overflow-hidden">
+    <div
+      className="glass-card rounded-3xl p-6 sm:p-8 max-w-2xl mx-auto text-center relative overflow-hidden"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* Decorative accent top line */}
       <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-leaf-400 via-leaf-600 to-amber-400" />
 
@@ -193,6 +236,18 @@ export default function ImageUpload() {
         {t('uploadSubtitle')}
       </p>
 
+      {/* Error Banner */}
+      {error && (
+        <div className="mb-4 flex items-start gap-3 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm text-left">
+          <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-600" />
+          <div className="flex-1">
+            <p className="font-semibold">Analysis Failed</p>
+            <p className="text-xs mt-0.5 text-rose-700">{error}</p>
+          </div>
+          <button onClick={() => setError('')} className="text-rose-400 hover:text-rose-600"><X size={16} /></button>
+        </div>
+      )}
+
       {/* Preview Box */}
       <div className="relative group mb-5">
         {preview ? (
@@ -206,6 +261,7 @@ export default function ImageUpload() {
               onClick={() => {
                 setPreview(null);
                 setSelectedSample(null);
+                setError('');
               }}
               className="absolute top-2 right-2 bg-slate-900/70 hover:bg-slate-900 text-white p-1.5 rounded-full transition shadow"
               title="Remove image"
@@ -216,13 +272,17 @@ export default function ImageUpload() {
         ) : (
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-leaf-300 hover:border-leaf-500 rounded-2xl py-10 px-4 bg-leaf-50/50 hover:bg-leaf-50 transition cursor-pointer flex flex-col items-center justify-center gap-2 text-slate-500 group"
+            className={`border-2 border-dashed rounded-2xl py-10 px-4 transition cursor-pointer flex flex-col items-center justify-center gap-2 text-slate-500 group ${
+              isDragging
+                ? 'border-leaf-500 bg-leaf-50 scale-[1.01]'
+                : 'border-leaf-300 hover:border-leaf-500 bg-leaf-50/50 hover:bg-leaf-50'
+            }`}
           >
-            <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-leaf-600 group-hover:scale-110 transition border border-leaf-200">
+            <div className={`w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-leaf-600 transition border border-leaf-200 ${isDragging ? 'scale-110' : 'group-hover:scale-110'}`}>
               <ImageIcon size={28} />
             </div>
             <p className="text-sm font-semibold text-slate-700">
-              Click to browse or drag & drop leaf photo
+              {isDragging ? 'Drop your image here!' : 'Click to browse or drag & drop leaf photo'}
             </p>
             <p className="text-xs text-slate-400">Supports JPG, PNG, WEBP up to 10MB</p>
           </div>
@@ -239,7 +299,7 @@ export default function ImageUpload() {
       />
 
       {/* Upload and Camera Buttons */}
-      <div className="flex flex-wrap gap-3 justify-center mb-6">
+      <div className="flex flex-wrap gap-3 justify-center mb-4">
         <button
           onClick={() => fileInputRef.current?.click()}
           className="flex items-center gap-2 bg-leaf-100 hover:bg-leaf-200 text-leaf-800 px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm hover:shadow"
@@ -255,6 +315,20 @@ export default function ImageUpload() {
           <Camera size={18} />
           {t('cameraButton')}
         </button>
+      </div>
+
+      {/* Optional Symptom Hint Input */}
+      <div className="mb-5">
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={symptomHint}
+            onChange={(e) => setSymptomHint(e.target.value)}
+            placeholder="Describe symptoms (optional): e.g. yellow leaves, brown spots..."
+            className="w-full pl-9 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-leaf-400 focus:border-transparent transition"
+          />
+        </div>
       </div>
 
       {/* Sample Quick-Test Presets */}
